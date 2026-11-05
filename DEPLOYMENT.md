@@ -1,33 +1,62 @@
 # Deployment
 
-This project can be deployed with Vercel (frontend), Render (API), and a hosted
-PostgreSQL database.
+Pustak uses Vercel for the frontend, Render for the API, and Neon for hosted
+PostgreSQL. The current production URLs are:
 
-## 1. Deploy the API to Render
+- Frontend: <https://pustak-frontend.vercel.app>
+- API: <https://pustak-api-vo21.onrender.com>
 
-1. In Render, create a new Blueprint from this GitHub repository and select
-   `render.yaml`.
-2. Set `DATABASE_URL` to the connection string for the existing PostgreSQL
-   database. Keep it private; do not commit it to the repository.
-3. After creating the Vercel site in the next section, set `FRONTEND_ORIGIN` to
-   its exact `https://` origin (without a path).
-4. Deploy the service. Render generates `JWT_SECRET` automatically.
-5. Confirm the service health check passes at `/api/health`.
+## Render API
 
-The database must already contain the tables expected by the API. This
-repository does not currently include database migrations or a schema setup
-script.
+The Render Blueprint is defined in `render.yaml`. Configure these environment
+variables on the `pustak-api` service:
 
-## 2. Deploy the frontend to Vercel
+- `DATABASE_URL`: Neon pooled PostgreSQL connection string.
+- `JWT_SECRET`: a private, randomly generated secret. Render can generate it.
+- `FRONTEND_ORIGIN`: the frontend's exact HTTPS origin, without a trailing
+  slash or path.
 
-1. Import the same GitHub repository into Vercel.
-2. Set the project Root Directory to `frontend`.
-3. Add the environment variable `VITE_API_URL` with the full API base URL,
-   including `/api` (for example, `https://your-api.onrender.com/api`).
-4. Deploy the project. `frontend/vercel.json` sends app routes to the React
-   application so direct navigation works.
-5. Update Render's `FRONTEND_ORIGIN` with the deployed site's origin and
-   redeploy the API if needed.
+The API health endpoint is `/api/health`. Render is configured to use it as
+the service health check.
 
-For local development, the frontend continues to use `http://localhost:5000/api`
-when `VITE_API_URL` is not set.
+## Neon database schema
+
+The initial schema is versioned in `backend/schema.sql`. To apply it, provide
+`DATABASE_URL_UNPOOLED` as a direct, non-pooled PostgreSQL connection string in
+the root `.env.local` or `backend/.env`, then run:
+
+```sh
+npm --prefix backend run db:setup
+```
+
+The setup script requires a direct connection and is safe to run again. The API
+itself uses the pooled `DATABASE_URL`. Keep both connection strings private and
+out of source control.
+
+## Vercel frontend
+
+The Vercel project is connected to this GitHub repository and configured with
+Root Directory `frontend`, build command `npm run build`, and output directory
+`dist`. Its `frontend/vercel.json` rewrites application routes to the React
+application so direct navigation works.
+
+Set `VITE_API_URL` in the Vercel Production and Preview environments to:
+
+```text
+https://pustak-api-vo21.onrender.com/api
+```
+
+After changing a Vercel environment variable, redeploy the frontend for the
+change to take effect. For automatic deployments, push changes to the connected
+GitHub repository.
+
+## Deployment order
+
+1. Ensure the Neon schema is applied.
+2. Configure `DATABASE_URL` and `JWT_SECRET` in Render, then deploy the API.
+3. Configure `VITE_API_URL` in Vercel, then deploy the frontend.
+4. Set Render's `FRONTEND_ORIGIN` to `https://pustak-frontend.vercel.app` and
+   redeploy the API.
+5. Verify the frontend and API health endpoint in a browser.
+
+For local development commands and prerequisites, see [README.md](./README.md).
