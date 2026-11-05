@@ -6,6 +6,22 @@ const { authenticate, authorize } = require('../middleware/auth');
 const router = express.Router();
 router.use(authenticate, authorize('staff', 'admin'));
 
+router.get('/summary', authorize('admin'), async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE role = 'member')::int AS members,
+        COUNT(*) FILTER (WHERE role = 'staff')::int AS staff,
+        COUNT(*) FILTER (WHERE role = 'admin')::int AS admins
+      FROM users
+    `);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const onlyMembers = req.user.role === 'staff';

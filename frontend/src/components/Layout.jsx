@@ -44,7 +44,13 @@ export default function Layout() {
       </aside>
       <main className="content">
         <div className="topbar">
-          <h1>Library Management System</h1>
+          <h1>
+            {user.role === 'admin'
+              ? 'Administrator Panel'
+              : user.role === 'staff'
+                ? 'Staff Workspace'
+                : 'Library Management System'}
+          </h1>
           <div className="user-box">
             <div style={{ textAlign: 'right' }}>
               <b style={{ display: 'block', fontSize: 14 }}>{user.name}</b>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { BookOpen, Users, BookMarked, AlertCircle } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
+import { BookOpen, Users, BookMarked, AlertCircle, UserCog, ShieldCheck } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../AuthContext';
 import Cover from '../components/Cover';
@@ -20,6 +20,7 @@ function StatCard({ icon, label, num, tint }) {
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
+  const [accountSummary, setAccountSummary] = useState(null);
   const [recent, setRecent] = useState([]);
   const [dueToday, setDueToday] = useState([]);
   const [overdue, setOverdue] = useState([]);
@@ -27,17 +28,20 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (user.role === 'member') return;
-    Promise.all([
+    const requests = [
       api.get('/issues/stats'),
       api.get('/issues'),
       api.get('/issues/due-today'),
       api.get('/issues/overdue'),
-    ])
-      .then(([s, r, d, o]) => {
+    ];
+    if (user.role === 'admin') requests.push(api.get('/users/summary'));
+    Promise.all(requests)
+      .then(([s, r, d, o, accounts]) => {
         setStats(s.data);
         setRecent(r.data.slice(0, 5));
         setDueToday(d.data.slice(0, 3));
         setOverdue(o.data.slice(0, 3));
+        if (accounts) setAccountSummary(accounts.data);
       })
       .catch(() => setError('Could not load dashboard data'));
   }, [user.role]);
@@ -46,7 +50,32 @@ export default function Dashboard() {
 
   return (
     <>
+      <div className="toolbar">
+        <div>
+          <h2>{user.role === 'admin' ? 'Administrator dashboard' : 'Staff dashboard'}</h2>
+          <p className="muted">
+            {user.role === 'admin'
+              ? 'Oversee library operations and manage staff access.'
+              : 'Manage daily book, member, and borrowing operations.'}
+          </p>
+        </div>
+        {user.role === 'admin' && (
+          <Link className="btn" to="/staff">
+            <UserCog size={18} /> Manage staff
+          </Link>
+        )}
+      </div>
       {error && <div className="error">{error}</div>}
+      {user.role === 'admin' && (
+        <section className="card">
+          <div className="card-head"><h2>Account overview</h2></div>
+          <div className="stats">
+            <StatCard icon={<Users size={24} color="#1F6F6A" />} label="Members" num={accountSummary?.members} tint="tint-teal" />
+            <StatCard icon={<UserCog size={24} color="#1F3358" />} label="Staff accounts" num={accountSummary?.staff} tint="tint-blue" />
+            <StatCard icon={<ShieldCheck size={24} color="#9A6A00" />} label="Administrator accounts" num={accountSummary?.admins} tint="tint-gold" />
+          </div>
+        </section>
+      )}
       <div className="stats">
         <StatCard icon={<BookOpen size={24} color="#1F3358" />} label="Total books" num={stats?.total_books} tint="tint-blue" />
         <StatCard icon={<Users size={24} color="#1F6F6A" />} label="Total members" num={stats?.total_members} tint="tint-teal" />
