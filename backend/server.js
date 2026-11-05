@@ -4,7 +4,12 @@ const cors = require('cors');
 const pool = require('./db');
 
 const app = express();
-app.use(cors());
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 app.get('/api/health', async (req, res) => {
