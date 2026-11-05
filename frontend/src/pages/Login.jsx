@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn } from 'lucide-react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../auth';
 import PublicNav from '../components/PublicNav';
 
 export default function Login() {

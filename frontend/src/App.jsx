@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './AuthContext';
+import { AuthProvider } from './AuthContext';
+import { useAuth } from './auth';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import About from './pages/About';
@@ -14,7 +15,8 @@ import MyBooks from './pages/MyBooks';
 import Alerts from './pages/Alerts';
 
 function Protected({ children }) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <p role="status">Loading your account...</p>;
   return user ? children : <Navigate to="/login" replace />;
 }
 

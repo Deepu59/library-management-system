@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../auth';
 import Cover from '../components/Cover';
 
 const EMPTY = { title: '', author: '', isbn: '', cover_url: '', total_copies: 1 };

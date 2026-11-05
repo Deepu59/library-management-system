@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, Users, ArrowLeftRight, UserCog, LogOut, BookMarked, Bell } from 'lucide-react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../auth';
 
 const MENU = [
   { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, roles: ['staff', 'admin'] },

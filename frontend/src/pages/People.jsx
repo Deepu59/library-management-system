@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { UserPlus, Pencil, Trash2, KeyRound, Phone, Mail } from 'lucide-react';
 import api from '../api';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../auth';
 
 export default function People({ staffMode = false }) {
   const { user } = useAuth();

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { BookOpen, Users, BookMarked, AlertCircle, UserCog, ShieldCheck } from 'lucide-react';
 import api from '../api';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../auth';
 import Cover from '../components/Cover';
 
 function StatCard({ icon, label, num, tint }) {
