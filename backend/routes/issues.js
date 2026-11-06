@@ -58,10 +58,24 @@ router.get('/', authorize('staff', 'admin'), (req, res) => list(res, ''));
 
 router.post('/', authorize('staff', 'admin'), async (req, res) => {
   const { book_id, user_id } = req.body;
-  const days = Number(req.body.days) || 7;
+  const days = Math.min(Math.max(Number(req.body.days) || 7, 1), 60);
   if (!book_id || !user_id) {
     return res.status(400).json({ message: 'book_id and user_id are required' });
   }
+
+  try {
+    const member = await pool.query(
+      "SELECT id FROM users WHERE id = $1 AND role = 'member'",
+      [user_id]
+    );
+    if (!member.rows[0]) {
+      return res.status(400).json({ message: 'Only member accounts can borrow books' });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -84,7 +98,7 @@ router.post('/', authorize('staff', 'admin'), async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     if (err.code === '23503') {
-      return res.status(400).json({ message: 'Book or member not found' });
+      return res.status(400).json({ message: 'Book not found' });
     }
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -120,6 +134,7 @@ router.put('/:id/return', authorize('staff', 'admin'), async (req, res) => {
     client.release();
   }
 });
+
 router.put('/:id/notify', authorize('staff', 'admin'), async (req, res) => {
   try {
     const result = await pool.query(
@@ -133,4 +148,5 @@ router.put('/:id/notify', authorize('staff', 'admin'), async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 module.exports = router;
